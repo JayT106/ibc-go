@@ -144,14 +144,25 @@ func (k Keeper) IterateConsensusStates(ctx sdk.Context, cb func(clientID string,
 }
 
 // GetAllGenesisClients returns all the clients in state with their client ids returned as IdentifiedClientState
-func (k Keeper) GetAllGenesisClients(ctx sdk.Context) types.IdentifiedClientStates {
+func (k Keeper) GetAllGenesisClients(ctx sdk.Context) (types.IdentifiedClientStates, error) {
 	var genClients types.IdentifiedClientStates
+	contextDone := false
 	k.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
-		genClients = append(genClients, types.NewIdentifiedClientState(clientID, cs))
-		return false
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			genClients = append(genClients, types.NewIdentifiedClientState(clientID, cs))
+			return false
+		}
 	})
 
-	return genClients.Sort()
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllGenesisClients context has been cancelled")
+	}
+
+	return genClients.Sort(), nil
 }
 
 // GetAllClientMetadata will take a list of IdentifiedClientState and return a list
@@ -160,27 +171,33 @@ func (k Keeper) GetAllGenesisClients(ctx sdk.Context) types.IdentifiedClientStat
 func (k Keeper) GetAllClientMetadata(ctx sdk.Context, genClients []types.IdentifiedClientState) ([]types.IdentifiedGenesisMetadata, error) {
 	genMetadata := make([]types.IdentifiedGenesisMetadata, 0)
 	for _, ic := range genClients {
-		cs, err := types.UnpackClientState(ic.ClientState)
-		if err != nil {
-			return nil, err
-		}
-		gms := cs.ExportMetadata(k.ClientStore(ctx, ic.ClientId))
-		if len(gms) == 0 {
-			continue
-		}
-		clientMetadata := make([]types.GenesisMetadata, len(gms))
-		for i, metadata := range gms {
-			cmd, ok := metadata.(types.GenesisMetadata)
-			if !ok {
-				return nil, sdkerrors.Wrapf(types.ErrInvalidClientMetadata, "expected metadata type: %T, got: %T",
-					types.GenesisMetadata{}, cmd)
+		select {
+		case <-ctx.Context().Done():
+			return nil, fmt.Errorf("the GetAllClientMetadata context is done")
+		default:
+			cs, err := types.UnpackClientState(ic.ClientState)
+			if err != nil {
+				return nil, err
 			}
-			clientMetadata[i] = cmd
+			gms := cs.ExportMetadata(k.ClientStore(ctx, ic.ClientId))
+			if len(gms) == 0 {
+				continue
+			}
+			clientMetadata := make([]types.GenesisMetadata, len(gms))
+			for i, metadata := range gms {
+				cmd, ok := metadata.(types.GenesisMetadata)
+				if !ok {
+					return nil, sdkerrors.Wrapf(types.ErrInvalidClientMetadata, "expected metadata type: %T, got: %T",
+						types.GenesisMetadata{}, cmd)
+				}
+				clientMetadata[i] = cmd
+			}
+			genMetadata = append(genMetadata, types.NewIdentifiedGenesisMetadata(
+				ic.ClientId,
+				clientMetadata,
+			))
 		}
-		genMetadata = append(genMetadata, types.NewIdentifiedGenesisMetadata(
-			ic.ClientId,
-			clientMetadata,
-		))
+
 	}
 	return genMetadata, nil
 }
@@ -198,7 +215,7 @@ func (k Keeper) SetAllClientMetadata(ctx sdk.Context, genMetadata []types.Identi
 }
 
 // GetAllConsensusStates returns all stored client consensus states.
-func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusStates {
+func (k Keeper) GetAllConsensusStates(ctx sdk.Context) (types.ClientsConsensusStates, error) {
 	clientConsStates := make(types.ClientsConsensusStates, 0)
 	mapClientIDToConsStateIdx := make(map[string]int)
 
@@ -219,7 +236,7 @@ func (k Keeper) GetAllConsensusStates(ctx sdk.Context) types.ClientsConsensusSta
 		return false
 	})
 
-	return clientConsStates.Sort()
+	return clientConsStates.Sort(), nil
 }
 
 // HasClientConsensusState returns if keeper has a ConsensusState for a particular

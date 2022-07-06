@@ -1,6 +1,8 @@
 package ibc
 
 import (
+	"path"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/ibc-go/v2/modules/core/02-client"
 	connection "github.com/cosmos/ibc-go/v2/modules/core/03-connection"
@@ -24,4 +26,20 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		ConnectionGenesis: connection.ExportGenesis(ctx, k.ConnectionKeeper),
 		ChannelGenesis:    channel.ExportGenesis(ctx, k.ChannelKeeper),
 	}
+}
+
+func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error {
+	if err := client.ExportGenesisTo(ctx, k.ClientKeeper, path.Join(exportPath, "client")); err != nil {
+		return err
+	}
+
+	if err := connection.ExportGenesisTo(ctx, k.ConnectionKeeper, path.Join(exportPath, "connection")); err != nil {
+		return err
+	}
+
+	if err := channel.ExportGenesisTo(ctx, k.ChannelKeeper, path.Join(exportPath, "channel")); err != nil {
+		return err
+	}
+
+	return nil
 }

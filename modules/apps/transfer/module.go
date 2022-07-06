@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
+	"path"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -449,4 +451,36 @@ func (am AppModule) NegotiateAppVersion(
 	}
 
 	return types.Version, nil
+}
+func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, importPath string) ([]abci.ValidatorUpdate, error) {
+	// var genesisState types.GenesisState
+	// cdc.MustUnmarshalJSON(data, &genesisState)
+	// am.keeper.InitGenesis(ctx, genesisState)
+	return []abci.ValidatorUpdate{}, nil
+}
+
+// ExportGenesis returns the exported genesis state as raw bytes for the ibc-transfer
+// module.
+func (am AppModule) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, exportPath string) error {
+	if err := os.MkdirAll(exportPath, 0755); err != nil {
+		return err
+	}
+
+	filePath := path.Join(exportPath, "genesis0")
+	f, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gs := am.keeper.ExportGenesis(ctx)
+	encoded, err := gs.Marshal()
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(encoded); err != nil {
+		return err
+	}
+
+	return nil
 }

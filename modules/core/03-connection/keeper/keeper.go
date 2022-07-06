@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -142,20 +144,31 @@ func (k Keeper) SetNextConnectionSequence(ctx sdk.Context, sequence uint64) {
 // GetAllClientConnectionPaths returns all stored clients connection id paths. It
 // will ignore the clients that haven't initialized a connection handshake since
 // no paths are stored.
-func (k Keeper) GetAllClientConnectionPaths(ctx sdk.Context) []types.ConnectionPaths {
+func (k Keeper) GetAllClientConnectionPaths(ctx sdk.Context) ([]types.ConnectionPaths, error) {
 	var allConnectionPaths []types.ConnectionPaths
+	contextDone := false
 	k.clientKeeper.IterateClients(ctx, func(clientID string, cs exported.ClientState) bool {
-		paths, found := k.GetClientConnectionPaths(ctx, clientID)
-		if !found {
-			// continue when connection handshake is not initialized
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			paths, found := k.GetClientConnectionPaths(ctx, clientID)
+			if !found {
+				// continue when connection handshake is not initialized
+				return false
+			}
+			connPaths := types.NewConnectionPaths(clientID, paths)
+			allConnectionPaths = append(allConnectionPaths, connPaths)
 			return false
 		}
-		connPaths := types.NewConnectionPaths(clientID, paths)
-		allConnectionPaths = append(allConnectionPaths, connPaths)
-		return false
 	})
 
-	return allConnectionPaths
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllClientConnectionPaths is done")
+	}
+
+	return allConnectionPaths, nil
 }
 
 // IterateConnections provides an iterator over all ConnectionEnd objects.
@@ -179,12 +192,25 @@ func (k Keeper) IterateConnections(ctx sdk.Context, cb func(types.IdentifiedConn
 }
 
 // GetAllConnections returns all stored ConnectionEnd objects.
-func (k Keeper) GetAllConnections(ctx sdk.Context) (connections []types.IdentifiedConnection) {
+func (k Keeper) GetAllConnections(ctx sdk.Context) ([]types.IdentifiedConnection, error) {
+	contextDone := false
+	connections := make([]types.IdentifiedConnection, 0)
 	k.IterateConnections(ctx, func(connection types.IdentifiedConnection) bool {
-		connections = append(connections, connection)
-		return false
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			connections = append(connections, connection)
+			return false
+		}
 	})
-	return connections
+
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllConnections context has been cancelled")
+	}
+
+	return connections, nil
 }
 
 // addConnectionToClient is used to add a connection identifier to the set of

@@ -106,7 +106,8 @@ func (suite *LegacyTestSuite) TestMigrateStoreSolomachine() {
 
 	// verify consensus states have been removed
 	for _, sm := range []*ibctesting.Solomachine{solomachine, solomachineMulti} {
-		clientConsensusStates := path.EndpointA.Chain.App.GetIBCKeeper().ClientKeeper.GetAllConsensusStates(path.EndpointA.Chain.GetContext())
+		clientConsensusStates, err := path.EndpointA.Chain.App.GetIBCKeeper().ClientKeeper.GetAllConsensusStates(path.EndpointA.Chain.GetContext())
+		suite.Require().NoError(err)
 		for _, client := range clientConsensusStates {
 			// GetAllConsensusStates should not return consensus states for our solo machine clients
 			suite.Require().NotEqual(sm.ClientID, client.ClientId)

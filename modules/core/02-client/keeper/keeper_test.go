@@ -255,8 +255,8 @@ func (suite KeeperTestSuite) TestGetAllGenesisClients() {
 	suite.Require().True(found)
 	expGenClients = append(expGenClients, types.NewIdentifiedClientState(exported.Localhost, localHostClient))
 
-	genClients := suite.chainA.App.GetIBCKeeper().ClientKeeper.GetAllGenesisClients(suite.chainA.GetContext())
-
+	genClients, err := suite.chainA.App.GetIBCKeeper().ClientKeeper.GetAllGenesisClients(suite.chainA.GetContext())
+	suite.Require().NoError(err)
 	suite.Require().Equal(expGenClients.Sort(), genClients)
 }
 
@@ -388,6 +388,7 @@ func (suite KeeperTestSuite) TestGetAllConsensusStates() {
 		}),
 	}.Sort()
 
-	consStates := suite.chainA.App.GetIBCKeeper().ClientKeeper.GetAllConsensusStates(suite.chainA.GetContext())
+	consStates, err := suite.chainA.App.GetIBCKeeper().ClientKeeper.GetAllConsensusStates(suite.chainA.GetContext())
+	suite.Require().NoError(err)
 	suite.Require().Equal(expConsensusStates, consStates, "%s \n\n%s", expConsensusStates, consStates)
 }

@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -240,39 +241,72 @@ func (k Keeper) IteratePacketSequence(ctx sdk.Context, iterator db.Iterator, cb 
 }
 
 // GetAllPacketSendSeqs returns all stored next send sequences.
-func (k Keeper) GetAllPacketSendSeqs(ctx sdk.Context) (seqs []types.PacketSequence) {
+func (k Keeper) GetAllPacketSendSeqs(ctx sdk.Context) ([]types.PacketSequence, error) {
+	contextDone := false
+	seqs := make([]types.PacketSequence, 0)
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyNextSeqSendPrefix))
 	k.IteratePacketSequence(ctx, iterator, func(portID, channelID string, nextSendSeq uint64) bool {
-		ps := types.NewPacketSequence(portID, channelID, nextSendSeq)
-		seqs = append(seqs, ps)
-		return false
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			ps := types.NewPacketSequence(portID, channelID, nextSendSeq)
+			seqs = append(seqs, ps)
+			return false
+		}
 	})
-	return seqs
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllPacketSendSeqs context has been cancelled")
+	}
+	return seqs, nil
 }
 
 // GetAllPacketRecvSeqs returns all stored next recv sequences.
-func (k Keeper) GetAllPacketRecvSeqs(ctx sdk.Context) (seqs []types.PacketSequence) {
+func (k Keeper) GetAllPacketRecvSeqs(ctx sdk.Context) ([]types.PacketSequence, error) {
+	contextDone := false
+	seqs := make([]types.PacketSequence, 0)
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyNextSeqRecvPrefix))
 	k.IteratePacketSequence(ctx, iterator, func(portID, channelID string, nextRecvSeq uint64) bool {
-		ps := types.NewPacketSequence(portID, channelID, nextRecvSeq)
-		seqs = append(seqs, ps)
-		return false
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			ps := types.NewPacketSequence(portID, channelID, nextRecvSeq)
+			seqs = append(seqs, ps)
+			return false
+		}
 	})
-	return seqs
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllPacketRecvSeqs context has been cancelled")
+	}
+	return seqs, nil
 }
 
 // GetAllPacketAckSeqs returns all stored next acknowledgements sequences.
-func (k Keeper) GetAllPacketAckSeqs(ctx sdk.Context) (seqs []types.PacketSequence) {
+func (k Keeper) GetAllPacketAckSeqs(ctx sdk.Context) ([]types.PacketSequence, error) {
+	contextDone := false
+	seqs := make([]types.PacketSequence, 0)
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(host.KeyNextSeqAckPrefix))
 	k.IteratePacketSequence(ctx, iterator, func(portID, channelID string, nextAckSeq uint64) bool {
-		ps := types.NewPacketSequence(portID, channelID, nextAckSeq)
-		seqs = append(seqs, ps)
-		return false
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			ps := types.NewPacketSequence(portID, channelID, nextAckSeq)
+			seqs = append(seqs, ps)
+			return false
+		}
 	})
-	return seqs
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllPacketRecvSeqs context has been cancelled")
+	}
+	return seqs, nil
 }
 
 // IteratePacketCommitment provides an iterator over all PacketCommitment objects. For each
@@ -285,13 +319,24 @@ func (k Keeper) IteratePacketCommitment(ctx sdk.Context, cb func(portID, channel
 }
 
 // GetAllPacketCommitments returns all stored PacketCommitments objects.
-func (k Keeper) GetAllPacketCommitments(ctx sdk.Context) (commitments []types.PacketState) {
+func (k Keeper) GetAllPacketCommitments(ctx sdk.Context) ([]types.PacketState, error) {
+	contextDone := false
+	commitments := make([]types.PacketState, 0)
 	k.IteratePacketCommitment(ctx, func(portID, channelID string, sequence uint64, hash []byte) bool {
-		pc := types.NewPacketState(portID, channelID, sequence, hash)
-		commitments = append(commitments, pc)
-		return false
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			pc := types.NewPacketState(portID, channelID, sequence, hash)
+			commitments = append(commitments, pc)
+			return false
+		}
 	})
-	return commitments
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllPacketCommitments context has been cancelled")
+	}
+	return commitments, nil
 }
 
 // IteratePacketCommitmentAtChannel provides an iterator over all PacketCommmitment objects
@@ -324,13 +369,24 @@ func (k Keeper) IteratePacketReceipt(ctx sdk.Context, cb func(portID, channelID 
 }
 
 // GetAllPacketReceipts returns all stored PacketReceipt objects.
-func (k Keeper) GetAllPacketReceipts(ctx sdk.Context) (receipts []types.PacketState) {
+func (k Keeper) GetAllPacketReceipts(ctx sdk.Context) ([]types.PacketState, error) {
+	contextDone := false
+	receipts := make([]types.PacketState, 0)
 	k.IteratePacketReceipt(ctx, func(portID, channelID string, sequence uint64, receipt []byte) bool {
-		packetReceipt := types.NewPacketState(portID, channelID, sequence, receipt)
-		receipts = append(receipts, packetReceipt)
-		return false
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			packetReceipt := types.NewPacketState(portID, channelID, sequence, receipt)
+			receipts = append(receipts, packetReceipt)
+			return false
+		}
 	})
-	return receipts
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllPacketCommitments context has been cancelled")
+	}
+	return receipts, nil
 }
 
 // IteratePacketAcknowledgement provides an iterator over all PacketAcknowledgement objects. For each
@@ -343,13 +399,26 @@ func (k Keeper) IteratePacketAcknowledgement(ctx sdk.Context, cb func(portID, ch
 }
 
 // GetAllPacketAcks returns all stored PacketAcknowledgements objects.
-func (k Keeper) GetAllPacketAcks(ctx sdk.Context) (acks []types.PacketState) {
+func (k Keeper) GetAllPacketAcks(ctx sdk.Context) ([]types.PacketState, error) {
+	contextDone := false
+	acks := make([]types.PacketState, 0)
 	k.IteratePacketAcknowledgement(ctx, func(portID, channelID string, sequence uint64, ack []byte) bool {
-		packetAck := types.NewPacketState(portID, channelID, sequence, ack)
-		acks = append(acks, packetAck)
-		return false
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			packetAck := types.NewPacketState(portID, channelID, sequence, ack)
+			acks = append(acks, packetAck)
+			return false
+		}
 	})
-	return acks
+
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllPacketAcks context has been cancelled")
+	}
+
+	return acks, nil
 }
 
 // IterateChannels provides an iterator over all Channel objects. For each
@@ -373,12 +442,23 @@ func (k Keeper) IterateChannels(ctx sdk.Context, cb func(types.IdentifiedChannel
 }
 
 // GetAllChannels returns all stored Channel objects.
-func (k Keeper) GetAllChannels(ctx sdk.Context) (channels []types.IdentifiedChannel) {
+func (k Keeper) GetAllChannels(ctx sdk.Context) ([]types.IdentifiedChannel, error) {
+	channels := make([]types.IdentifiedChannel, 0)
+	contextDone := false
 	k.IterateChannels(ctx, func(channel types.IdentifiedChannel) bool {
-		channels = append(channels, channel)
-		return false
+		select {
+		case <-ctx.Context().Done():
+			contextDone = true
+			return true
+		default:
+			channels = append(channels, channel)
+			return false
+		}
 	})
-	return channels
+	if contextDone {
+		return nil, fmt.Errorf("the GetAllChannels context has been cancelled")
+	}
+	return channels, nil
 }
 
 // GetChannelClientState returns the associated client state with its ID, from a port and channel identifier.

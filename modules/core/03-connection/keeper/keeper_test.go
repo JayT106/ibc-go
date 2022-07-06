@@ -81,7 +81,8 @@ func (suite KeeperTestSuite) TestGetAllConnections() {
 
 	expConnections := []types.IdentifiedConnection{iconn1, iconn2}
 
-	connections := suite.chainA.App.GetIBCKeeper().ConnectionKeeper.GetAllConnections(suite.chainA.GetContext())
+	connections, err := suite.chainA.App.GetIBCKeeper().ConnectionKeeper.GetAllConnections(suite.chainA.GetContext())
+	suite.Require().NoError(err)
 	suite.Require().Len(connections, len(expConnections))
 	suite.Require().Equal(expConnections, connections)
 }
@@ -104,7 +105,8 @@ func (suite KeeperTestSuite) TestGetAllClientConnectionPaths() {
 		types.NewConnectionPaths(path2.EndpointA.ClientID, []string{path2.EndpointA.ConnectionID, path3.EndpointA.ConnectionID}),
 	}
 
-	connPaths := suite.chainA.App.GetIBCKeeper().ConnectionKeeper.GetAllClientConnectionPaths(suite.chainA.GetContext())
+	connPaths, err := suite.chainA.App.GetIBCKeeper().ConnectionKeeper.GetAllClientConnectionPaths(suite.chainA.GetContext())
+	suite.Require().NoError(err)
 	suite.Require().Len(connPaths, 2)
 	suite.Require().Equal(expPaths, connPaths)
 }

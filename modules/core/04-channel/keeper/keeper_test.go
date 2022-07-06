@@ -121,7 +121,8 @@ func (suite KeeperTestSuite) TestGetAllChannels() {
 
 	ctxA := suite.chainA.GetContext()
 
-	channels := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllChannels(ctxA)
+	channels, err := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllChannels(ctxA)
+	suite.Require().NoError(err)
 	suite.Require().Len(channels, len(expChannels))
 	suite.Require().Equal(expChannels, channels)
 }
@@ -156,9 +157,13 @@ func (suite KeeperTestSuite) TestGetAllSequences() {
 		suite.chainA.App.GetIBCKeeper().ChannelKeeper.SetNextSequenceAck(ctxA, seq.PortId, seq.ChannelId, seq.Sequence)
 	}
 
-	sendSeqs := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketSendSeqs(ctxA)
-	recvSeqs := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketRecvSeqs(ctxA)
-	ackSeqs := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketAckSeqs(ctxA)
+	sendSeqs, err := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketSendSeqs(ctxA)
+	suite.Require().NoError(err)
+	recvSeqs, err := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketRecvSeqs(ctxA)
+	suite.Require().NoError(err)
+	ackSeqs, err := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketAckSeqs(ctxA)
+	suite.Require().NoError(err)
+
 	suite.Len(sendSeqs, 2)
 	suite.Len(recvSeqs, 2)
 	suite.Len(ackSeqs, 2)
@@ -230,9 +235,12 @@ func (suite KeeperTestSuite) TestGetAllPacketState() {
 		suite.chainA.App.GetIBCKeeper().ChannelKeeper.SetPacketCommitment(ctxA, comm.PortId, comm.ChannelId, comm.Sequence, comm.Data)
 	}
 
-	acks := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketAcks(ctxA)
-	receipts := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketReceipts(ctxA)
-	commitments := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketCommitments(ctxA)
+	acks, err := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketAcks(ctxA)
+	suite.Require().NoError(err)
+	receipts, err := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketReceipts(ctxA)
+	suite.Require().NoError(err)
+	commitments, err := suite.chainA.App.GetIBCKeeper().ChannelKeeper.GetAllPacketCommitments(ctxA)
+	suite.Require().NoError(err)
 
 	suite.Require().Len(acks, len(expAcks))
 	suite.Require().Len(commitments, len(expCommitments))
