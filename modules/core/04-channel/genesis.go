@@ -94,9 +94,9 @@ func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error 
 	}
 
 	var fileIndex = 0
-	fn := fmt.Sprintf("genesis%d", fileIndex)
+	fn := fmt.Sprintf("%s%d", types.SubModuleName, fileIndex)
 	filePath := path.Join(exportPath, fn)
-	f, err := os.Create(filePath)
+	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error 
 				}
 
 				fileIndex++
-				f, err = os.Create(filePath)
+				f, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 				if err != nil {
 					return err
 				}
@@ -210,7 +210,7 @@ func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error 
 				}
 
 				fileIndex++
-				f, err = os.Create(filePath)
+				f, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 				if err != nil {
 					return err
 				}
@@ -263,7 +263,7 @@ func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error 
 				}
 
 				fileIndex++
-				f, err = os.Create(filePath)
+				f, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 				if err != nil {
 					return err
 				}
@@ -317,7 +317,7 @@ func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error 
 				}
 
 				fileIndex++
-				f, err = os.Create(filePath)
+				f, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 				if err != nil {
 					return err
 				}
@@ -371,7 +371,7 @@ func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error 
 				}
 
 				fileIndex++
-				f, err = os.Create(filePath)
+				f, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 				if err != nil {
 					return err
 				}
@@ -425,7 +425,7 @@ func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error 
 				}
 
 				fileIndex++
-				f, err = os.Create(filePath)
+				f, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 				if err != nil {
 					return err
 				}
@@ -479,7 +479,7 @@ func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error 
 				}
 
 				fileIndex++
-				f, err = os.Create(filePath)
+				f, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 				if err != nil {
 					return err
 				}

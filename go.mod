@@ -25,4 +25,4 @@ require (
 	google.golang.org/protobuf v1.27.1
 )
 
-replace github.com/cosmos/cosmos-sdk => github.com/jayt106/cosmos-sdk v0.43.0-rc2.0.20220705201145-9495d8cda98c
+replace github.com/cosmos/cosmos-sdk => github.com/jayt106/cosmos-sdk v0.43.0-rc2.0.20220714191740-3b1ee7d8c788
