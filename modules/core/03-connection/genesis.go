@@ -1,7 +1,6 @@
 package connection
 
 import (
-	"encoding/binary"
 	"fmt"
 	"os"
 	"path"
@@ -45,151 +44,53 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	}
 }
 
-func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error {
-	if err := os.MkdirAll(exportPath, 0755); err != nil {
-		return err
-	}
-
-	var fileIndex = 0
-	fn := fmt.Sprintf("%s%d", types.SubModuleName, fileIndex)
-	filePath := path.Join(exportPath, fn)
-	f, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+func InitGenesisFrom(ctx sdk.Context, k keeper.Keeper, importPath string) error {
+	fp := path.Join(importPath, fmt.Sprintf("genesis_%s.bin", types.SubModuleName))
+	f, err := os.OpenFile(fp, os.O_RDONLY, 0666)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	fs := 0
-	// write the genesis param to the file
-	params := k.GetParams(ctx)
-	encodedParam, err := params.Marshal()
+	fi, err := f.Stat()
 	if err != nil {
 		return err
 	}
 
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(len(encodedParam)))
-	n, err := f.Write(b)
+	bz := make([]byte, fi.Size())
+	if _, err := f.Read(bz); err != nil {
+		return err
+	}
+
+	var gs *types.GenesisState
+	if err := gs.Unmarshal(bz); err != nil {
+		return err
+	}
+
+	InitGenesis(ctx, k, *gs)
+	return nil
+}
+
+func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error {
+	if err := os.MkdirAll(exportPath, 0755); err != nil {
+		return err
+	}
+
+	fp := path.Join(exportPath, fmt.Sprintf("genesis_%s.bin", types.SubModuleName))
+	f, err := os.Create(fp)
 	if err != nil {
 		return err
 	}
-	fs += n
+	defer f.Close()
 
-	// write the nextClientSequence to the file
-	seq := k.GetNextConnectionSequence(ctx)
-	b = make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, seq)
-	n, err = f.Write(b)
-	if err != nil {
-		return err
-	}
-	fs += n
-
-	// write the connections to the file
-	connections, err := k.GetAllConnections(ctx)
-	if err != nil {
-		return err
-	}
-	b = make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(len(connections)))
-	n, err = f.Write(b)
-	if err != nil {
-		return err
-	}
-	fs += n
-
-	for _, connection := range connections {
-		select {
-		case <-ctx.Context().Done():
-			return fmt.Errorf("context has been cancelled")
-		default:
-			bz, err := connection.Marshal()
-			if err != nil {
-				return err
-			}
-			b := make([]byte, 4)
-			binary.LittleEndian.PutUint32(b, uint32(len(bz)))
-			n, err := f.Write(b)
-			if err != nil {
-				return err
-			}
-			fs += n
-
-			n, err = f.Write(bz)
-			if err != nil {
-				return err
-			}
-			fs += n
-
-			// we limited the file size to 100M
-			if fs > 100000000 {
-				if err := f.Close(); err != nil {
-					return err
-				}
-
-				fileIndex++
-				f, err = os.Create(filePath)
-				if err != nil {
-					return err
-				}
-
-				fs = 0
-			}
-		}
-	}
-
-	// write the client connection path to the file
-	connectionPaths, err := k.GetAllClientConnectionPaths(ctx)
+	gs := ExportGenesis(ctx, k)
+	bz, err := gs.Marshal()
 	if err != nil {
 		return err
 	}
 
-	b = make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(len(connectionPaths)))
-	n, err = f.Write(b)
-	if err != nil {
+	if _, err := f.Write(bz); err != nil {
 		return err
-	}
-	fs += n
-
-	for _, connectionPath := range connectionPaths {
-		select {
-		case <-ctx.Context().Done():
-			return fmt.Errorf("context has been cancelled")
-		default:
-			bz, err := connectionPath.Marshal()
-			if err != nil {
-				return err
-			}
-			b := make([]byte, 4)
-			binary.LittleEndian.PutUint32(b, uint32(len(bz)))
-			n, err := f.Write(b)
-			if err != nil {
-				return err
-			}
-			fs += n
-
-			n, err = f.Write(bz)
-			if err != nil {
-				return err
-			}
-			fs += n
-
-			// we limited the file size to 100M
-			if fs > 100000000 {
-				if err := f.Close(); err != nil {
-					return err
-				}
-
-				fileIndex++
-				f, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-				if err != nil {
-					return err
-				}
-
-				fs = 0
-			}
-		}
 	}
 
 	return nil

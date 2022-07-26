@@ -28,6 +28,22 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 }
 
+func InitGenesisFrom(ctx sdk.Context, k keeper.Keeper, createLocalhost bool, importPath string) error {
+	if err := client.InitGenesisFrom(ctx, k.ClientKeeper, importPath); err != nil {
+		return err
+	}
+
+	if err := connection.InitGenesisFrom(ctx, k.ConnectionKeeper, importPath); err != nil {
+		return err
+	}
+
+	if err := channel.InitGenesisFrom(ctx, k.ChannelKeeper, importPath); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error {
 	if err := client.ExportGenesisTo(ctx, k.ClientKeeper, path.Join(exportPath, "client")); err != nil {
 		return err

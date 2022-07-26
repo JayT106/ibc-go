@@ -202,17 +202,14 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 }
 
 func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, importPath string) ([]abci.ValidatorUpdate, error) {
-	// var gs types.GenesisState
-	// err := cdc.UnmarshalJSON(bz, &gs)
-	// if err != nil {
-	// 	panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", host.ModuleName, err))
-	// }
-	// InitGenesis(ctx, *am.keeper, am.createLocalhost, &gs)
+	if err := InitGenesisFrom(ctx, *am.keeper, am.createLocalhost, importPath); err != nil {
+		return nil, err
+	}
+
 	return []abci.ValidatorUpdate{}, nil
 }
 
 // ExportGenesisTo export the genesis to a file given the export path
 func (am AppModule) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, exportPath string) error {
 	return ExportGenesisTo(ctx, *am.keeper, exportPath)
-
 }

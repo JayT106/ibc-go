@@ -262,13 +262,9 @@ func (am AppModule) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, export
 
 // InitGenesisFrom implements the AppModule interface.
 func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, importPath string) ([]abci.ValidatorUpdate, error) {
-	// for _, ibcApp := range am.ibcApps {
-	// 	if ibcApp.PortID != "" && !am.portKeeper.IsBound(ctx, ibcApp.PortID) {
-	// 		// bind mock portID
-	// 		cap := am.portKeeper.BindPort(ctx, ibcApp.PortID)
-	// 		ibcApp.ScopedKeeper.ClaimCapability(ctx, cap, host.PortPath(ibcApp.PortID))
-	// 	}
-	// }
+	// bind mock port ID
+	cap := am.portKeeper.BindPort(ctx, ModuleName)
+	am.scopedKeeper.ClaimCapability(ctx, cap, host.PortPath(ModuleName))
 
 	return []abci.ValidatorUpdate{}, nil
 }
