@@ -81,7 +81,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) types.GenesisState {
 	}
 }
 
-func InitGenesisFrom(ctx sdk.Context, k keeper.Keeper, importPath string) error {
+func InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, k keeper.Keeper, importPath string) error {
 	fp := path.Join(importPath, fmt.Sprintf("genesis_%s.bin", types.SubModuleName))
 	f, err := os.OpenFile(fp, os.O_RDONLY, 0666)
 	if err != nil {
