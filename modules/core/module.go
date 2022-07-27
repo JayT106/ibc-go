@@ -202,7 +202,7 @@ func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weig
 }
 
 func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, importPath string) ([]abci.ValidatorUpdate, error) {
-	if err := InitGenesisFrom(ctx, *am.keeper, am.createLocalhost, importPath); err != nil {
+	if err := InitGenesisFrom(ctx, cdc, *am.keeper, am.createLocalhost, importPath); err != nil {
 		return nil, err
 	}
 
@@ -211,5 +211,5 @@ func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, import
 
 // ExportGenesisTo export the genesis to a file given the export path
 func (am AppModule) ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, exportPath string) error {
-	return ExportGenesisTo(ctx, *am.keeper, exportPath)
+	return ExportGenesisTo(ctx, cdc, *am.keeper, exportPath)
 }

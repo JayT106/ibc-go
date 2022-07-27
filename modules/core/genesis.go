@@ -1,6 +1,7 @@
 package ibc
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	client "github.com/cosmos/ibc-go/v2/modules/core/02-client"
 	connection "github.com/cosmos/ibc-go/v2/modules/core/03-connection"
@@ -26,32 +27,32 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 }
 
-func InitGenesisFrom(ctx sdk.Context, k keeper.Keeper, createLocalhost bool, importPath string) error {
-	if err := client.InitGenesisFrom(ctx, k.ClientKeeper, importPath); err != nil {
+func InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, k keeper.Keeper, createLocalhost bool, importPath string) error {
+	if err := client.InitGenesisFrom(ctx, cdc, k.ClientKeeper, importPath); err != nil {
 		return err
 	}
 
-	if err := connection.InitGenesisFrom(ctx, k.ConnectionKeeper, importPath); err != nil {
+	if err := connection.InitGenesisFrom(ctx, cdc, k.ConnectionKeeper, importPath); err != nil {
 		return err
 	}
 
-	if err := channel.InitGenesisFrom(ctx, k.ChannelKeeper, importPath); err != nil {
+	if err := channel.InitGenesisFrom(ctx, cdc, k.ChannelKeeper, importPath); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func ExportGenesisTo(ctx sdk.Context, k keeper.Keeper, exportPath string) error {
-	if err := client.ExportGenesisTo(ctx, k.ClientKeeper, exportPath); err != nil {
+func ExportGenesisTo(ctx sdk.Context, cdc codec.JSONCodec, k keeper.Keeper, exportPath string) error {
+	if err := client.ExportGenesisTo(ctx, cdc, k.ClientKeeper, exportPath); err != nil {
 		return err
 	}
 
-	if err := connection.ExportGenesisTo(ctx, k.ConnectionKeeper, exportPath); err != nil {
+	if err := connection.ExportGenesisTo(ctx, cdc, k.ConnectionKeeper, exportPath); err != nil {
 		return err
 	}
 
-	if err := channel.ExportGenesisTo(ctx, k.ChannelKeeper, exportPath); err != nil {
+	if err := channel.ExportGenesisTo(ctx, cdc, k.ChannelKeeper, exportPath); err != nil {
 		return err
 	}
 
