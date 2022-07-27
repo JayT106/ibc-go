@@ -471,12 +471,12 @@ func (am AppModule) InitGenesisFrom(ctx sdk.Context, cdc codec.JSONCodec, import
 		return nil, err
 	}
 
-	var gs *types.GenesisState
+	var gs types.GenesisState
 	if err := gs.Unmarshal(bz); err != nil {
 		return nil, err
 	}
 
-	am.keeper.InitGenesis(ctx, *gs)
+	am.keeper.InitGenesis(ctx, gs)
 	return []abci.ValidatorUpdate{}, nil
 }
 
